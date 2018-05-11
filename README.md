@@ -29,8 +29,8 @@ No further configuration is required
 In order to use the Gateway API distributed query client several variables must be provided. Notice that the TED and the prefixes are retrieved from the Gateway API Services as described in their [documentation](http://vicinity.bavenir.eu).
 ```
 // -- Data required for discovery relevant data and solve a SPARQL query
-String query  = ... 		  			 // A SPARQL query
-Set<String> neighbours = ...  	 // A set of neighbour oids
+String query  = ...            // A SPARQL query
+Set<String> neighbours = ...   // A set of neighbour oids
 StringBuilder log = new StringBuilder(); // An empty in-memory log
     
 // Retrieve from the Gateway API Services using a secured channel (datails)
