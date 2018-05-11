@@ -1,0 +1,6 @@
+client/virtualizer/RDFVirtualizer.class
+client/model/Triple.class
+client/jena/JenaUtils.class
+client/discovery/IteratorDiscovery.class
+client/VicinityClient.class
+client/vocabullary/Ontology.class
