@@ -16,7 +16,7 @@ git clone https://github.com/vicinityh2020/vicinity-open-gateway-api-distributed
 Then compile the source and build a jar file
 ```
 #!shell
-sudo mvn clean install
+sudo mvn clean package
 ```
 Finally import the jar file that will be generated in the target folder to your project
 
