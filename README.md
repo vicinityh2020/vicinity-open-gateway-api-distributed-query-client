@@ -1,8 +1,8 @@
-# Name
+# VICINITY Gateway API distributed query client
 
 ### About
 
-(NAME) implements the interoperability among Gateway APIs in VICINITY. For a given SPARQL query it allows to discover Gateway APIs that expose relevant data and generate a set of solutions. The communication to remote endpoints is handled by the Gateway API itself, and therefore, the security is ensured.
+Gateway API distributed query client implements the interoperability among Gateway APIs in VICINITY. For a given SPARQL query it allows to discover Gateway APIs that expose relevant data and generate a set of solutions. The communication to remote endpoints is handled by the Gateway API itself, and therefore, the security is ensured.
 
 
 ## Installation 
@@ -11,12 +11,12 @@ Download the source code from the repository:
 
 ```
 #!shell
-git clone git@cpsgit.informatik.uni-kl.de:VICINITY/vicinity-open-gateway-api.git
+git clone https://github.com/vicinityh2020/vicinity-open-gateway-api-distributed-query-client.git
 ```
-Then compile the source and build a jar file:
+Then compile the source and build a jar file
 ```
 #!shell
-mvn install
+sudo mvn clean install
 ```
 Finally import the jar file that will be generated in the target folder to your project
 
@@ -26,7 +26,7 @@ No further configuration is required
 
 ## Usage 
 
-In order to use (NAME) several variables must be provided. Notice that the TED and the prefixes are retrieved from the Gateway API Services as described in their [documentation](http://vicinity.bavenir.eu).
+In order to use the Gateway API distributed query client several variables must be provided. Notice that the TED and the prefixes are retrieved from the Gateway API Services as described in their [documentation](http://vicinity.bavenir.eu).
 ```
 // -- Data required for discovery relevant data and solve a SPARQL query
 String query  = ... 		  			 // A SPARQL query
