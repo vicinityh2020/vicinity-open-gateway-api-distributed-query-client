@@ -30,7 +30,7 @@ In order to use the Gateway API distributed query client several variables must 
 ```
 // -- Data required for discovery relevant data and solve a SPARQL query
 String query  = ... 		  			 // A SPARQL query
-Set<String> neighbours = ...  			 // A set of neighbour oids
+Set<String> neighbours = ...  	 // A set of neighbour oids
 StringBuilder log = new StringBuilder(); // An empty in-memory log
     
 // Retrieve from the Gateway API Services using a secured channel (datails)
