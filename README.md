@@ -26,7 +26,7 @@ No further configuration is required
 
 ## Usage 
 
-In order to use the Gateway API distributed query client several variables must be provided. Notice that the TED and the prefixes are retrieved from the Gateway API Services as described in their [documentation](http://vicinity.bavenir.eu).
+In order to use the Gateway API distributed query client several variables must be provided. Notice that the TED and the prefixes are retrieved from the Gateway API Services as described in their [documentation](https://github.com/vicinityh2020/vicinity-gateway-api-services).
 ```
 // -- Data required for discovery relevant data and solve a SPARQL query
 String query  = ...            // A SPARQL query
@@ -45,7 +45,7 @@ Then a client object must be initialized using previous variables
 VicinityClient client = new VicinityClient(jsonTED, neighbours, jsonPrefixes);
 ```
 
-Following we discover relevant Things in the TED taking the neighbours of the requester Gateway API into account. We suggest to parallelized the loop 'for' in the code below   to increase efficiency. In addition, to access the Gateway API Services a secured channel must be used; details to exchange data with the Gateway API Services is described in its [documentation](http://vicinity.bavenir.eu).
+Following we discover relevant Things in the TED taking the neighbours of the requester Gateway API into account. We suggest to parallelized the loop 'for' in the code below   to increase efficiency. In addition, to access the Gateway API Services a secured channel must be used; details to exchange data with the Gateway API Services is described in its [documentation](https://github.com/vicinityh2020/vicinity-gateway-api-services).
 
 ```
 // -- Discovery
