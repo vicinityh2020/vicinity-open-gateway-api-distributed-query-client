@@ -60,7 +60,7 @@ public class RDFVirtualizer {
             Model virtualizedRDF = translateFromJsonToRDF(rdfData, thingIri, mappingIri, jsonData);
             outputModel.add(virtualizedRDF);
         }
-
+       
         return outputModel;
     }
 
@@ -94,58 +94,90 @@ public class RDFVirtualizer {
     private Model translateFromJsonToRDF(Model thingDescriptionModel, String describedIri, String mappingIri, String jsonData){
         Model result = ModelFactory.createDefaultModel();
         Resource thingResource = ResourceFactory.createResource(describedIri);
+        
         // Retrieve Mapping properties
         String key = retrieveValuesOfMappingProperties(mappingIri, Ontology.keyProperty, thingDescriptionModel);
         String property = retrieveValuesOfMappingProperties(mappingIri, Ontology.predicateProperty, thingDescriptionModel);
         String jsonPath = retrieveValuesOfMappingProperties(mappingIri, Ontology.jsonPathProperty, thingDescriptionModel);
         String transformedByThingDescriptionIri = retrieveValuesOfMappingProperties(mappingIri, Ontology.valuesTransformedBy, thingDescriptionModel); // point the thingDescription from the transformedBy mapping
-
+       
         // Filter the received json if there is a jsonPath
-        JSONArray filteredJsons = retrieveFilteredJsonArray(jsonData, jsonPath);
+        	JSONArray filteredJsons = retrieveFilteredJsonArray(jsonData, jsonPath);
         for (int index = 0; index < filteredJsons.length(); index++) {
-            JSONObject filteredJson = (JSONObject) filteredJsons.get(index);
-            if(transformedByThingDescriptionIri.length()==0 && key.length()>0) {
-                // Plain Case: Data Property
-                if(filteredJson!=null && filteredJson.keySet().contains(key)){
-                    String jsonValue = String.valueOf(filteredJson.get(key.trim()));
-                    // If the mapping is an object property with no transformedBy then the value contained in the json is virtualized as a resource
-                    RDFNode node = ResourceFactory.createStringLiteral(jsonValue);
-                    if(isObjectPropertyMapping(mappingIri, thingDescriptionModel))
-                        node = ResourceFactory.createResource(jsonValue);
-                    result.add(thingResource, ResourceFactory.createProperty(property), node);
-                }else{
-                    log.append("\n[WARNING] mapping key \"").append(key).append("\" does not match the json document ").append(filteredJson);
-                }
-
-            }else if(transformedByThingDescriptionIri.length()>0){
-                // Recursive case: Object property
-
-                String jsonPartition = filteredJson.toString(); // Retrieve the json that contains what should be transformed by
-                if(key.length()>0) // if there is a key a partition of the json is retrieved, otherwhise the whole json will be transformed
-                    jsonPartition = String.valueOf(filteredJson.get(key));
-
-                String blankIri =  NodeFactory.createBlankNode().toString();
-                List<String> accessMappingIris = JenaUtils.fromRDFNodeToString(thingDescriptionModel.listObjectsOfProperty(ResourceFactory.createResource(transformedByThingDescriptionIri), ResourceFactory.createProperty(Ontology.hasAccessMappingProperty)).toList());
-                if( accessMappingIris.size()<1){
-                    log.append("\n[WARNING] No AccessMapping were found when virtualizing RDF using description '").append(transformedByThingDescriptionIri).append("'");
-                }else if(accessMappingIris.size()>1){
-                    log.append("\n[WARNING] More than one AccessMapping were found when virtualizing rdf'");
-                }else{
-                    String accessMappingIri = accessMappingIris.get(0);
-                    Model model = virtualizeRDF(thingDescriptionModel, blankIri, accessMappingIri, jsonPartition);
-                    result.add(thingResource, ResourceFactory.createProperty(property), ResourceFactory.createResource(blankIri));
-                    result.add(model);
-                }
-
-            }else{
-                log.append("\n[INFO] key received ").append(key).append(" is empty");
-                log.append("\n[INFO] TransformedBy received ").append(transformedByThingDescriptionIri).append(" is empty");
-            }
+        		if(filteredJsons.get(index) instanceof JSONArray) { // current json is an array, never been here
+        			JSONArray arrayOfJsonsfilteredJsons = (JSONArray) filteredJsons.get(index);
+        			for(int nestedIndex = 0; nestedIndex< arrayOfJsonsfilteredJsons.length(); nestedIndex++) {
+        				JSONObject jsonDocument = (JSONObject) arrayOfJsonsfilteredJsons.get(nestedIndex);
+        				Model virtualization = processJSONObject(jsonDocument, key, transformedByThingDescriptionIri, property, mappingIri, thingResource, thingDescriptionModel);
+        				result.add(virtualization);
+        			}
+        			// maybe here I shoukld call the same funciton recursively for each contained document
+        		}else {
+        			if(filteredJsons.get(0) instanceof String) { // check if current json is actually a string value from an array
+        				String literalValue = (String) filteredJsons.get(index);
+        				RDFNode literal = ResourceFactory.createTypedLiteral(literalValue);
+        				result.add(thingResource, ResourceFactory.createProperty(property), literal);
+            		}else { // current json is basic json
+            			JSONObject filteredJson = (JSONObject) filteredJsons.get(index);
+            			Model virtualization = processJSONObject(filteredJson, key, transformedByThingDescriptionIri, property, mappingIri, thingResource, thingDescriptionModel);
+            			result.add(virtualization);
+            		}
+        			
+        		}
+        		
         }
 
         return result;
     }
 
+    
+    private Model processJSONObject(JSONObject filteredJson, String key, String transformedByThingDescriptionIri, String property, String mappingIri, Resource thingResource, Model thingDescriptionModel) {
+    		Model result = ModelFactory.createDefaultModel();
+        if(transformedByThingDescriptionIri.length()==0 && key.length()>0) {
+            // Plain Case: Data Property
+            if(filteredJson!=null && filteredJson.keySet().contains(key)){
+                String jsonValue = String.valueOf(filteredJson.get(key.trim()));
+                // If the mapping is an object property with no transformedBy then the value contained in the json is virtualized as a resource
+                RDFNode node = ResourceFactory.createStringLiteral(jsonValue);
+                if(isObjectPropertyMapping(mappingIri, thingDescriptionModel))
+                    node = ResourceFactory.createResource(jsonValue);
+                result.add(thingResource, ResourceFactory.createProperty(property), node);
+            }else{
+                log.append("\n[WARNING] mapping key \"").append(key).append("\" does not match the json document ").append(filteredJson);
+            }
+
+        }else if(transformedByThingDescriptionIri.length()>0){
+            // Recursive case: Object property
+            String jsonPartition = filteredJson.toString(); // Retrieve the json that contains what should be transformed by
+            if(key.length()>0) // if there is a key a partition of the json is retrieved, otherwhise the whole json will be transformed
+                jsonPartition = String.valueOf(filteredJson.get(key));
+
+            String blankIri =  NodeFactory.createBlankNode().toString();
+            
+            List<String> accessMappingIris = JenaUtils.fromRDFNodeToString(thingDescriptionModel.listObjectsOfProperty(ResourceFactory.createResource(transformedByThingDescriptionIri), ResourceFactory.createProperty(Ontology.hasAccessMappingProperty)).toList());
+            if( accessMappingIris.size()<1){
+                log.append("\n[WARNING] No AccessMapping were found when virtualizing RDF using description '").append(transformedByThingDescriptionIri).append("'");
+            }else if(accessMappingIris.size()>1){
+                log.append("\n[WARNING] More than one AccessMapping were found when virtualizing rdf'");
+            }else{
+                String accessMappingIri = accessMappingIris.get(0);
+                Model model = virtualizeRDF(thingDescriptionModel, blankIri, accessMappingIri, jsonPartition);
+                result.add(thingResource, ResourceFactory.createProperty(property), ResourceFactory.createResource(blankIri));
+                result.add(model);
+            }
+
+        }else{
+            log.append("\n[INFO] key received ").append(key).append(" is empty");
+            log.append("\n[INFO] TransformedBy received ").append(transformedByThingDescriptionIri).append(" is empty");
+        }
+        return result;
+    }
+    
+    
+    
+    
+    
+    // --------
 
     /**
      * This method returns the array of filtered JSONs as result of applying a json path to a JSON document
@@ -159,8 +191,14 @@ public class RDFVirtualizer {
             stringJsons = applyJsonPath(json, jsonPath);
         }else{
             StringBuilder filteredStringJsons = new StringBuilder();
-            filteredStringJsons.append("[").append(json).append("]");
+            
+            if(!json.startsWith("[") && !json.endsWith("]")) {
+            		filteredStringJsons.append("[").append(json).append("]");
+            }else {
+            	filteredStringJsons.append(json);
+            }
             stringJsons = filteredStringJsons.toString();
+            
         }
         // Obtain the array
         JSONArray filteredJsons = new JSONArray();
@@ -178,9 +216,9 @@ public class RDFVirtualizer {
      * @param jsonPath A json path
      * @return A JSON document containing the data filtered by the json path
      */
-    @SuppressWarnings("unchecked")
-	private String applyJsonPath(String json, String jsonPath){
+    private String applyJsonPath(String json, String jsonPath){
         String stringJson = null;
+        
         try {
             Object value = JsonPath.parse(json).read(jsonPath);
             if (value instanceof LinkedHashMap) {
