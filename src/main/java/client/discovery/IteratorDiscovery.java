@@ -288,7 +288,7 @@ public class IteratorDiscovery implements Iterator<List<String>> {
                         }else{
                             String thingIri = describedThingIris.get(0).toString();
                             String accessMappingIri = accessMapping.toString();
-                            String href = hrefs.get(0).toString();
+                            String href = hrefs.get(0).asLiteral().getString();
                             Triple<String, String, String> networkLink = new Triple<String, String, String>(thingIri, accessMappingIri, href);
                             networkLinks.add(networkLink);
                         }

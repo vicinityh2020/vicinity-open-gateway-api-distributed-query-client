@@ -178,7 +178,8 @@ public class RDFVirtualizer {
      * @param jsonPath A json path
      * @return A JSON document containing the data filtered by the json path
      */
-    private String applyJsonPath(String json, String jsonPath){
+    @SuppressWarnings("unchecked")
+	private String applyJsonPath(String json, String jsonPath){
         String stringJson = null;
         try {
             Object value = JsonPath.parse(json).read(jsonPath);
