@@ -154,7 +154,7 @@ public class RDFVirtualizer {
 
             String blankIri =  NodeFactory.createBlankNode().toString();
             
-            List<String> accessMappingIris = JenaUtils.fromRDFNodeToString(thingDescriptionModel.listObjectsOfProperty(ResourceFactory.createResource(transformedByThingDescriptionIri), ResourceFactory.createProperty(Ontology.hasAccessMappingProperty)).toList());
+            List<String> accessMappingIris = JenaUtils.fromRDFNodeToString(thingDescriptionModel.listObjectsOfProperty(ResourceFactory.createResource(transformedByThingDescriptionIri), Ontology.MAP_TD_HAS_ACCESS_MAPPING).toList());
             if( accessMappingIris.size()<1){
                 log.append("\n[WARNING] No AccessMapping were found when virtualizing RDF using description '").append(transformedByThingDescriptionIri).append("'");
             }else if(accessMappingIris.size()>1){
@@ -282,7 +282,7 @@ public class RDFVirtualizer {
      */
     private List<String> retrieveMappingTypesFromThingDescription(String mappingIri, Model rdfData){
         Resource mappingIriResource = ResourceFactory.createResource(mappingIri);
-        Property typeProperty = ResourceFactory.createProperty(Ontology.type);
+        Property typeProperty = Ontology.RDF_TYPE;
 
         List<RDFNode> typesNodes = rdfData.listObjectsOfProperty(mappingIriResource,typeProperty).toList();
 

@@ -30,7 +30,13 @@
             <artifactId>json-path</artifactId>
             <version>2.3.0</version>
         </dependency>
-
+		
+		<!-- Rest requests-->
+		<dependency>
+			<groupId>com.mashape.unirest</groupId>
+			<artifactId>unirest-java</artifactId>
+			<version>1.4.9</version>
+		</dependency>
     </dependencies>
 
 </project>
