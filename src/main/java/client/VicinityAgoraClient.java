@@ -1,12 +1,8 @@
 package client;
 
+import client.jena.JenaUtils;
 import client.virtualizer.RDFVirtualizer;
-import client.vocabullary.Ontology;
-
-import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.GraphExtract;
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.TripleBoundary;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -15,17 +11,14 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.Writer;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 /**
- * <P>This class is allows discovering and accessing Things in the VICINITY cloud thorugh the Gateway API Services</P>
+ * <P>This class allows discovering and accessing Things in the VICINITY cloud through the Gateway API Services</P>
  *
  * @author Andrea Cimmino
  * @email cimmino@fi.upm.es
@@ -33,24 +26,30 @@ import java.util.logging.Logger;
  */
 public class VicinityAgoraClient implements VicinityClient {
 
+	// -- Attributes
+	
     private RDFVirtualizer virtualizer;
     private String queryString;
 	private Logger log = Logger.getLogger(VicinityAgoraClient.class.getName());
 	private Model filteredStaticRDF;
     
+	// -- Contructors
+	
 	/**
      * Constructor of VicinityClient class
      * @param jsonTed A JSON-LD document containing a TED
      * @param neighbours A set of neighbour oid
      */
     public VicinityAgoraClient(String jsonTed, Set<String> neighbours, String query){
-    		Model ted = parseRDF(jsonTed, Ontology.JSONLD);
+    		Model ted = JenaUtils.parseRDF(jsonTed, VicinityOntology.JSONLD);
     		filteredStaticRDF = filterTedByNeighbours(ted, neighbours);
     		queryString = query;
     		this.virtualizer = new RDFVirtualizer();
     }
     
-    // -- Neighbors filtering
+    // -- Methods
+    
+    // -- -- Neighbors filtering
     
     /**
      * This method filters the resources within a TED taking into account a set of allowed neighbors
@@ -61,7 +60,7 @@ public class VicinityAgoraClient implements VicinityClient {
     private Model filterTedByNeighbours(Model ted, Set<String> neighbours) {
     		Model neighboursStaticRDF = ModelFactory.createDefaultModel();
 		// 1. Retrieve from ted all these objects that are in the range of core:component property
-		NodeIterator tedResourcesIris = ted.listObjectsOfProperty(ResourceFactory.createProperty(Ontology.CORE_TED_HAS_COMPONENT));
+		NodeIterator tedResourcesIris = ted.listObjectsOfProperty(ResourceFactory.createProperty(VicinityOntology.CORE_TED_HAS_COMPONENT));
 		while(tedResourcesIris.hasNext()){
 			// 1.1. For each object retrieve its RDF and its IRI
 			Node resourceNode = tedResourcesIris.next().asNode();
@@ -73,7 +72,7 @@ public class VicinityAgoraClient implements VicinityClient {
 				String neighbour = neighboursIterator.next();
 				if(resourceIri.contains(neighbour)) {
 					// 1.2.1.A ...then, store the RDF of such ted's object
-				    Model neighbourRDF = extractFullSubTree(resourceNode, ted) ;
+				    Model neighbourRDF = JenaUtils.extractFullSubTree(resourceNode, ted) ;
 				    neighboursStaticRDF.add(neighbourRDF);
 				}
 			}
@@ -92,16 +91,15 @@ public class VicinityAgoraClient implements VicinityClient {
     public List<Entry<String, String>> getRelevantGatewayAPIAddresses(){
     		List<Entry<String, String>> remoteEndpoints = new ArrayList<Entry<String, String>>();
     		// 1. Check that query requires to access real-time distributed data
-    		Boolean gatherRemoteEndpoints = areRemoteEnpointsRequired();
+    		Boolean gatherRemoteEndpoints = VicinityOntology.areRemoteEnpointsRequired(this.queryString);
     		if(gatherRemoteEndpoints) {
     			// 1.A if that's the case retrieve first all the map:AccessMapping resources
-    			NodeIterator accessMappings = this.filteredStaticRDF.listObjectsOfProperty(Ontology.MAP_TD_HAS_ACCESS_MAPPING);
-    			
+    			NodeIterator accessMappings = this.filteredStaticRDF.listObjectsOfProperty(VicinityOntology.MAP_TD_HAS_ACCESS_MAPPING);
     			while(accessMappings.hasNext()) {
     				// 1.A.1 For each map:AccessMapping extract its IRI, RDF, and remote endpoint Link
     				Node accessMappingNode = accessMappings.next().asNode();
-    				Model accessMappingRDF = extractFullSubTree(accessMappingNode, this.filteredStaticRDF);
-    				String accessMappingRDFString = toString(accessMappingRDF);
+    				Model accessMappingRDF = JenaUtils.extractFullSubTree(accessMappingNode, this.filteredStaticRDF);
+    				String accessMappingRDFString = JenaUtils.toString(accessMappingRDF);
     				List<String> remoteEndpointAddresses = extractRemoteAddresses(accessMappingRDF);
     				// 1.A.2 Add each remote endpoint Link found to the output variable, consider that each endpoint will be associated to the map:AccessMapping RDF
     				int remoteAddressesSize = remoteEndpointAddresses.size();
@@ -116,23 +114,7 @@ public class VicinityAgoraClient implements VicinityClient {
     		return remoteEndpoints;
     }
     
-    /**
-     * This method checks that the query provided in the constructor contains a pattern referencing the part of the ontology that models real-time data<p>.
-     * Therefore this method specifies whether a query requires to retrieve data from remote endpoints or not.
-     * @return A boolean value specifying if remote endpoints should be accessed
-     */
-	private Boolean areRemoteEnpointsRequired() {
-		Boolean gatherRemoteEndpoints = false;
-		int size = Ontology.virtualizationPatterns.size();
-		for (int index = 0; index < size; index++) {
-			String pattern = Ontology.virtualizationPatterns.get(index);
-			if (this.queryString.contains(pattern)) {
-				gatherRemoteEndpoints = true;
-				break;
-			}
-		}
-		return gatherRemoteEndpoints;
-	}
+    
     
     /**
      * This method extracts the wot:Link contained in a jena {@link Model} mapping
@@ -141,14 +123,37 @@ public class VicinityAgoraClient implements VicinityClient {
      */
     private List<String> extractRemoteAddresses(Model rdf) {
 		List<String> remoteAddresses = new ArrayList<String>();
-		NodeIterator remoteLinks = rdf.listObjectsOfProperty(ResourceFactory.createProperty(Ontology.WOT_MAPPING_MAPS_RESOURCES_FROM));
+		NodeIterator remoteLinks = rdf.listObjectsOfProperty(ResourceFactory.createProperty(VicinityOntology.WOT_MAPPING_MAPS_RESOURCES_FROM));
 		while(remoteLinks.hasNext()) {
 			RDFNode rdfNode = remoteLinks.next();
-			// TODO: do here, if the node has media type RDF retrieve it
-			NodeIterator remoteHRefs = rdfNode.getModel().listObjectsOfProperty(ResourceFactory.createProperty(Ontology.WOT_MAPPING_LINK_HREF));
-			while(remoteHRefs.hasNext()) {
-				String href = remoteHRefs.next().toString();
-				remoteAddresses.add(href);
+			Model nodeModel = rdfNode.getModel();
+			List<RDFNode> mediaTypes = nodeModel.listObjectsOfProperty(VicinityOntology.WOT_ACCESS_MAPPING_HAS_MEDIA_TYPE).toList();
+			mediaTypes.addAll(nodeModel.listObjectsOfProperty(VicinityOntology.WOT_ACCESS_MAPPING_MEDIA_TYPE).toList());
+			if(!mediaTypes.isEmpty()) {
+				NodeIterator remoteHRefs = rdfNode.getModel().listObjectsOfProperty(ResourceFactory.createProperty(VicinityOntology.WOT_MAPPING_LINK_HREF));
+				while(remoteHRefs.hasNext()) {
+					String href = remoteHRefs.next().toString();
+					String mediaType = mediaTypes.get(0).asLiteral().getString();
+					try {
+						if(isRDFMediaType(mediaType)) {
+							String remoteRDF = Unirest.get(href).asString().getBody();
+							addRemoteRDF(remoteRDF, mediaType);
+						}else if(isExternalLinkWithJSONMediaType(mediaType, href)){
+							String json = Unirest.get(href).asString().getBody();
+							ResIterator accessMappingIRIsIterator = rdf.listSubjectsWithProperty(VicinityOntology.RDF_TYPE, VicinityOntology.WOT_TYPE_ACCESS_MAPPING);
+							while(accessMappingIRIsIterator.hasNext()) {
+								addVirtualizedData(accessMappingIRIsIterator.next().getModel(), json);
+							}
+						}else {
+							remoteAddresses.add(href);
+						}
+					} catch (UnirestException e) {
+						log.severe(e.toString());
+					}
+				}
+				
+			}else {
+				log.severe("No remote endpoints where found for accessMapping ");
 			}
 		}
 		
@@ -156,9 +161,28 @@ public class VicinityAgoraClient implements VicinityClient {
 	}
 
 	
-    
-    
-    // -- Query solving
+    private void addRemoteRDF(String remoteRDF, String mediaType) {
+    		if(VicinityOntology.CONTENT_TYPE_RDF_JSONLD.equals(mediaType)) {	
+    			this.filteredStaticRDF.add(JenaUtils.parseRDF(remoteRDF, VicinityOntology.JSONLD));
+    		}else if(VicinityOntology.CONTENT_TYPE_RDF_NT.equals(mediaType))	{
+    			this.filteredStaticRDF.add(JenaUtils.parseRDF(remoteRDF, VicinityOntology.NT));
+    		}else if(VicinityOntology.CONTENT_TYPE_RDF_TURLE.equals(mediaType))	{
+    			this.filteredStaticRDF.add(JenaUtils.parseRDF(remoteRDF, VicinityOntology.TURTULE));
+    		}else if(VicinityOntology.CONTENT_TYPE_RDF_XML.equals(mediaType))	{
+    			this.filteredStaticRDF.add(JenaUtils.parseRDF(remoteRDF, VicinityOntology.RDF_XML));
+    		}
+		
+	}
+
+	private boolean isExternalLinkWithJSONMediaType(String mediaType, String href) {
+		return href.contains("http") && mediaType.replace(" ", "").equals("application/json");
+	}
+
+	private boolean isRDFMediaType(String mediaType) {
+		return mediaType.equals(VicinityOntology.CONTENT_TYPE_RDF_XML) || mediaType.equals(VicinityOntology.CONTENT_TYPE_RDF_TURLEX) || mediaType.equals(VicinityOntology.CONTENT_TYPE_RDF_TURLE) || mediaType.equals(VicinityOntology.CONTENT_TYPE_RDF_NT) || mediaType.equals(VicinityOntology.CONTENT_TYPE_RDF_JSONLD);
+	}
+
+	// -- Query solving
    
     /* (non-Javadoc)
 	 * @see client.VicinityClient#solveQuery(java.util.List)
@@ -168,7 +192,7 @@ public class VicinityAgoraClient implements VicinityClient {
     		int dynamicRDFSize = gatewaysData.size();
     		for(int dynamicRDFIndex=0; dynamicRDFIndex < dynamicRDFSize; dynamicRDFIndex++) {
     			Entry<String,String> dynamicRDFTuple = gatewaysData.get(dynamicRDFIndex);
-    			Model accessMappingRDF = parseRDF(dynamicRDFTuple.getKey(), "TURTLE");
+    			Model accessMappingRDF = JenaUtils.parseRDF(dynamicRDFTuple.getKey(), "TURTLE");
     			String jsonData = dynamicRDFTuple.getValue();
     			// translates the dynamic data into RDF and adds it to this.filteredStaticRDF
     			addVirtualizedData(accessMappingRDF, jsonData);
@@ -179,17 +203,19 @@ public class VicinityAgoraClient implements VicinityClient {
     
     
     private void addVirtualizedData(Model accessMappingRDF, String jsonData) {
-    		List<Resource> accessMappings = accessMappingRDF.listSubjectsWithProperty(Ontology.RDF_TYPE, Ontology.WOT_TYPE_ACCESS_MAPPING).toList();
+    		List<Resource> accessMappings = accessMappingRDF.listSubjectsWithProperty(VicinityOntology.RDF_TYPE, VicinityOntology.WOT_TYPE_ACCESS_MAPPING).toList();
     		int accessMappingsSize = accessMappings.size();
     		for(int index=0; index < accessMappingsSize; index++) {
         		String accessMappingIri = accessMappings.get(index).getURI();
         		List<String> describedThings = getDescribedThingsOfAccessMapping(accessMappingIri);
         		if(!describedThings.isEmpty()) {
         			int describedThingsSize = describedThings.size();
-        			for(int describedThingsIndex = 0; describedThingsIndex < describedThingsSize; describedThingsIndex++) {
+        			int describedThingsIndex = 0;
+        			while( describedThingsIndex < describedThingsSize) {
         				String thingDescribedIRI = describedThings.get(describedThingsIndex);
         				Model dynamicData =  this.virtualizer.virtualizeRDF(accessMappingRDF, thingDescribedIRI, accessMappingIri, jsonData);
         				this.filteredStaticRDF.add(dynamicData);
+        				describedThingsIndex++;
         			}
         		}else {
         			StringBuilder logMessage = new StringBuilder("Client is not able to retrieve the core:Value related to the accessMapping: ").append(accessMappingIri);
@@ -201,10 +227,10 @@ public class VicinityAgoraClient implements VicinityClient {
 
     private List<String> getDescribedThingsOfAccessMapping(String accessMappingIri) {
     		List<String> coreValueIRIs = new ArrayList<String>();
-    		ResIterator descriptionsIterator = this.filteredStaticRDF.listSubjectsWithProperty(Ontology.MAP_TD_HAS_ACCESS_MAPPING, ResourceFactory.createResource(accessMappingIri));
+    		ResIterator descriptionsIterator = this.filteredStaticRDF.listSubjectsWithProperty(VicinityOntology.MAP_TD_HAS_ACCESS_MAPPING, ResourceFactory.createResource(accessMappingIri));
     		while(descriptionsIterator.hasNext()) {
     			Resource descriptionResource = descriptionsIterator.next();
-        		NodeIterator thingsDescribedIterator = this.filteredStaticRDF.listObjectsOfProperty(descriptionResource, Ontology.CORE_TD_DESCRIBES);
+        		NodeIterator thingsDescribedIterator = this.filteredStaticRDF.listObjectsOfProperty(descriptionResource, VicinityOntology.CORE_TD_DESCRIBES);
         		while(thingsDescribedIterator.hasNext()) 
         			coreValueIRIs.add(thingsDescribedIterator.next().asResource().getURI());
     		}
@@ -247,45 +273,6 @@ public class VicinityAgoraClient implements VicinityClient {
     
     
    
-    
-    /**
-     * This method transforms a String variable with RDF content into a jena {@link Model}
-     * @param strRDF A String variable containing RDF in "JSON-LD" format
-     * @return a jena {@link Model}
-     */
-    private Model parseRDF(String strRDF, String format) {
-    		Model parsedModel = ModelFactory.createDefaultModel();
-    		try {
-			 InputStream is = new ByteArrayInputStream( strRDF.getBytes() );
-			 parsedModel.read(is, null, format);
-    		}catch(Exception e) {
-    			String message = new String("Something went wrong parsing RDF\n").concat(e.toString());
-    			log.severe(message);
-    		}
-		return parsedModel;
-	}
-    
-    /**
-     * This method explores a graph (given as a {@link Model}) starting from a given {@link Node} until it reaches the leafs of the tree 
-     * @param resourceNode A {@link Node} in the graph where the search starts
-     * @param ted A {@link Model} containing the graph to explore
-     * @return a String variable containing the explored graph as RDF in "TURTLE" format
-     */
-    private Model extractFullSubTree(Node resourceNode, Model ted) {
-    		GraphExtract extractor = new GraphExtract(TripleBoundary.stopNowhere);
-        Graph extracted = extractor.extract(resourceNode, ted.getGraph());
-        return ModelFactory.createModelForGraph(extracted);
-    }
-    
-    /**
-     * This method transforms the RDF within a {@link Model} into a String variable
-     * @param model a jena {@link Model} 
-     * @return a String variable with the same RDF of the input {@link Model} in "TURTLE" format
-     */
-    private String toString(Model model) {
-		Writer output = new StringWriter();
-		model.write(output, Ontology.TURTULE);
-		return output.toString();
-	}
+   
 
 }

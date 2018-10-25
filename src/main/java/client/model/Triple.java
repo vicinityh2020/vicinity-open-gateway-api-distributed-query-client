@@ -4,7 +4,7 @@ package client.model;
  * <P>Triple generic object</P>
  *
  * @author Andrea Cimmino
- * @version 1.0
+ * @version 0.6.3
  */
 public class Triple<T,M,V> {
 
@@ -13,7 +13,7 @@ public class Triple<T,M,V> {
     private V thirdElement;
 
     /**
-     * Contructor of Triple class
+     * Constructor of Triple class
      * @param firstElement Any element to be stored as the first
      * @param secondElement Any element to be stored as the second
      * @param thirdElement Any element to be stored as the third
@@ -81,6 +81,8 @@ public class Triple<T,M,V> {
         StringBuilder representation = new StringBuilder();
         representation.append("[").append(firstElement).append(", ");
         representation.append(secondElement).append(", ");
+        representation.append(thirdElement).append("]");
         return representation.toString();
     }
+    
 }

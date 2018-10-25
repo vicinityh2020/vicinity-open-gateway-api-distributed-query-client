@@ -31,52 +31,33 @@ In order to use the Gateway API distributed query client several variables must 
 // -- Data required for discovery relevant data and solve a SPARQL query
 String query  = ...            // A SPARQL query
 Set<String> neighbours = ...   // A set of neighbour oids
-StringBuilder log = new StringBuilder(); // An empty in-memory log
-    
-// Retrieve from the Gateway API Services using a secured channel (datails)
 String jsonTED = ...  	  // A JSON-LD with a relevant TED for the query
-String jsonPrefixes = ... // A JSON document containing VICINITY ontology prefixes    
 ```
 
 Then a client object must be initialized using previous variables
 
 ```
 // -- Init the client
-VicinityClient client = new VicinityClient(jsonTED, neighbours, jsonPrefixes);
+VicinityClient client = new VicinityClient(jsonTED, neighbours, query);
 ```
 
 Following we discover relevant Things in the TED taking the neighbours of the requester Gateway API into account. We suggest to parallelized the loop 'for' in the code below   to increase efficiency. In addition, to access the Gateway API Services a secured channel must be used; details to exchange data with the Gateway API Services is described in its [documentation](https://github.com/vicinityh2020/vicinity-gateway-api-services).
 
 ```
 // -- Discovery
-while(client.existIterativelyDiscoverableThings()){
-   // Discover relevant resources in the TED
-   List<String> neighboursThingsIRIs = client.discoverRelevantThingIRI();
-   // Retrieve remote JSON data for each Thing IRI
-   for(String neighboursThingIRI:neighboursThingsIRIs){
-       String thingsJsonRDF = ... // Retrieve the JSON-LD exposed by the GATEWAY API SERVICES for this IRI Thing 
-       client.updateDiscovery(thingsJsonRDF);
-   }
+List<Entry<String,String>> remoteGatewayEndpoints = client.getRelevantGatewayAPIAddresses();
+for(Entry<String,String> remoteGateway:remoteGatewayEndpoints) {
+	String remoteGatewayLink = remoteGateway.getKey();
+	String remoteGatewayExposedJSon = ... // retrieve the json exposed by the gateway by means of 'remoteGatewayLink'
+	remoteGateway.setValue(jsonDocument);
 }
-List<Triple<String,String,String>> relevantGatewayAPIAddresses = client.getRelevantGatewayAPIAddresses();
-```
-
-Then relaying on a secure channel we access each Gateway API address to retrieve the data that they expose. To increase execution efficiency we recomend to parallelize the loop 'for' in the code below. 
-```
-// -- Distributed access thorugh secured channel
-for(Triple<String,String,String> neighbourGatewayAPIAddress:relevantGatewayAPIAddresses){ 
-   String gatewayApiAddress =  neighbourGatewayAPIAddress.getThirdElement();
-   String jsonData = ... // Retrieve the JSON document exposed by URL in gatewayApiAddress
-   neighbourGatewayAPIAddress.setThirdElement(jsonData);
-}    
 ```
 
 Finally they query is solved using the JSON documents exposed by the different Gateway APIs. The query solution is provided as a list of maps each of which represents a solution for the given query. Notice that afterwards we close the client, this frees memory used increasing the efficiency.
 
 ```
 // -- Solve query
-List<Map<String,String>> queryResults = client.solveQuery(query, relevantGatewayAPIAddresses);
-client.close();
+List<Map<String,String>> queryResults = client.solveQuery(remoteEndpoints);
 ```
 
 Pulling all together
@@ -84,36 +65,22 @@ Pulling all together
 // -- Data required for discovery relevant data and solve a SPARQL query
 String query  = ...          // A SPARQL query
 Set<String> neighbours = ... // A set of neighbour oids
-StringBuilder log = new StringBuilder(); // An empty in-memory log
     
-// Retrieve from the Gateway API Services using a secured channel (datails)
+// Retrieve from the Gateway API Services using a secured channel
 String jsonTED = ...  	  // A JSON-LD with a relevant TED for the query
-String jsonPrefixes = ... // A JSON document containing VICINITY ontology prefixes
 
 // -- Init the client
-VicinityClient client = new VicinityClient(jsonTED, neighbours, jsonPrefixes);
+VicinityClient client = new VicinityClient(jsonTED, neighbours, query);
 
-// -- Discovery
-while(client.existIterativelyDiscoverableThings()){
-  // Discover relevant resources in the TED
-  List<String> neighboursThingsIRIs = client.discoverRelevantThingIRI();
-  // Retrieve remote JSON data for each Thing IRI
-  for(String neighboursThingIRI:neighboursThingsIRIs){
-    String thingsJsonRDF = ... // Retrieve the JSON-LD exposed by the GATEWAY API SERVICES for this IRI Thing 
-    client.updateDiscovery(thingsJsonRDF);
-  }
-}
-List<Triple<String,String,String>> relevantGatewayAPIAddresses = client.getRelevantGatewayAPIAddresses();
-
-// -- Distributed access thorugh secured channel
-for(Triple<String,String,String> neighbourGatewayAPIAddress:relevantGatewayAPIAddresses){ 
-   String gatewayApiAddress =  neighbourGatewayAPIAddress.getThirdElement();
-   String jsonData = ... // Retrieve the JSON document exposed by URL in gatewayApiAddress
-   neighbourGatewayAPIAddress.setThirdElement(jsonData);
+// -- Discovery & Distributed access thorugh secured channel
+List<Entry<String,String>> remoteGatewayEndpoints = client.getRelevantGatewayAPIAddresses();
+for(Entry<String,String> remoteGateway:remoteGatewayEndpoints) {
+	String remoteGatewayLink = remoteGateway.getKey();
+	String remoteGatewayExposedJSon = ... // retrieve the json exposed by the gateway by means of 'remoteGatewayLink'
+	remoteGateway.setValue(jsonDocument);
 }
 
 // -- Solve query
-List<Map<String,String>> queryResults = client.solveQuery(query, relevantGatewayAPIAddresses);
-client.close();
+List<Map<String,String>> queryResults = client.solveQuery(remoteEndpoints);
 
 ```

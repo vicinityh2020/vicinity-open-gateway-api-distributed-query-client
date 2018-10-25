@@ -1,7 +1,9 @@
 package client.virtualizer;
 
+import client.VicinityOntology;
+import client.VicinityAgoraClient;
 import client.jena.JenaUtils;
-import client.vocabullary.Ontology;
+
 import com.jayway.jsonpath.JsonPath;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
@@ -11,39 +13,25 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 /**
- * <P>This class generates RDF from a given JSON </P>
+ * <P>This class generates RDF from a given JSON following Agora mappings</P>
  *
  * @author Andrea Cimmino
- * @version 1.0
+ * @version 0.6.3
  */
 public class RDFVirtualizer {
 
-    private StringBuilder log;
+	// -- Attributes
+	
+	private Logger log = Logger.getLogger(VicinityAgoraClient.class.getName());
+	
+	// -- Constructors
 
-    /**
-     * Constructor of RDFVirtualizer class
-     */
-    public RDFVirtualizer(){
-        log = new StringBuilder();
-    }
-
-    /**
-     * This method returns the cached log for this method
-     * @return A log containing all the execution information of this class
-     */
-    public StringBuilder getLog() {
-        return log;
-    }
-
-    /**
-     * This method cleans all the memory used by this class
-     */
-    public void clearLog() {
-        log = new StringBuilder();
-    }
-
+	// -- Methods
+	
     /**
      * This method virtualizes RDF from a given JSON document following the specifications of a certain AccessMapping
      * @param rdfData A jena Model containing the RDF associated to the AccessMapping
@@ -73,15 +61,23 @@ public class RDFVirtualizer {
      */
     private List<String> retrieveMappingResourcesFromAccessMapping(Model nodeRDF, String accessMappingIri){
         List<String> mappingList = new ArrayList<String>();
-        List<RDFNode> mappingNodes = nodeRDF.listObjectsOfProperty(ResourceFactory.createResource(accessMappingIri), ResourceFactory.createProperty(Ontology.hasMappingProperty)).toList();
-        if(mappingNodes.size()==0)
-            log.append("\n[WARNING] Access mapping '").append(accessMappingIri).append("' has no mappings");
+        List<RDFNode> mappingNodes = nodeRDF.listObjectsOfProperty(ResourceFactory.createResource(accessMappingIri), VicinityOntology.WOT_HAS_MAPPING).toList();
+        if(mappingNodes.isEmpty()) {
+        		String message = logMessage1(accessMappingIri);
+            log.warning(message);
+        }
         for(RDFNode mappingNode:mappingNodes){
             mappingList.add(mappingNode.toString());
         }
         return mappingList;
     }
 
+    private String logMessage1(String accessMappingIri) {
+    		StringBuilder message = new StringBuilder("[WARNING] Access mapping '");
+    		message.append(accessMappingIri).append("' has no mappings");
+    		return message.toString();
+    }
+    
 
     /**
      * This method translates a JSON document into RDF following a Mapping specification
@@ -96,10 +92,10 @@ public class RDFVirtualizer {
         Resource thingResource = ResourceFactory.createResource(describedIri);
         
         // Retrieve Mapping properties
-        String key = retrieveValuesOfMappingProperties(mappingIri, Ontology.keyProperty, thingDescriptionModel);
-        String property = retrieveValuesOfMappingProperties(mappingIri, Ontology.predicateProperty, thingDescriptionModel);
-        String jsonPath = retrieveValuesOfMappingProperties(mappingIri, Ontology.jsonPathProperty, thingDescriptionModel);
-        String transformedByThingDescriptionIri = retrieveValuesOfMappingProperties(mappingIri, Ontology.valuesTransformedBy, thingDescriptionModel); // point the thingDescription from the transformedBy mapping
+        String key = retrieveValuesOfMappingProperties(mappingIri, VicinityOntology.MAP_KEY, thingDescriptionModel);
+        String property = retrieveValuesOfMappingProperties(mappingIri, VicinityOntology.MAP_PREDICATE, thingDescriptionModel);
+        String jsonPath = retrieveValuesOfMappingProperties(mappingIri, VicinityOntology.MAP_JSONPATH, thingDescriptionModel);
+        String transformedByThingDescriptionIri = retrieveValuesOfMappingProperties(mappingIri, VicinityOntology.MAP_VALUES_TRANSFORMED_BY, thingDescriptionModel); // point the thingDescription from the transformedBy mapping
        
         // Filter the received json if there is a jsonPath
         	JSONArray filteredJsons = retrieveFilteredJsonArray(jsonData, jsonPath);
@@ -143,7 +139,11 @@ public class RDFVirtualizer {
                     node = ResourceFactory.createResource(jsonValue);
                 result.add(thingResource, ResourceFactory.createProperty(property), node);
             }else{
-                log.append("\n[WARNING] mapping key \"").append(key).append("\" does not match the json document ").append(filteredJson);
+            		String filteredJsonString = "";
+            		if(filteredJson!=null)
+            			filteredJsonString = filteredJson.toString();
+            		String waning0 = logMessage("\n[WARNING] mapping key \"",key,"\" does not match the json document ",filteredJsonString);
+                log.warning(waning0);
             }
 
         }else if(transformedByThingDescriptionIri.length()>0){
@@ -154,11 +154,12 @@ public class RDFVirtualizer {
 
             String blankIri =  NodeFactory.createBlankNode().toString();
             
-            List<String> accessMappingIris = JenaUtils.fromRDFNodeToString(thingDescriptionModel.listObjectsOfProperty(ResourceFactory.createResource(transformedByThingDescriptionIri), Ontology.MAP_TD_HAS_ACCESS_MAPPING).toList());
-            if( accessMappingIris.size()<1){
-                log.append("\n[WARNING] No AccessMapping were found when virtualizing RDF using description '").append(transformedByThingDescriptionIri).append("'");
+            List<String> accessMappingIris = JenaUtils.fromRDFNodeToString(thingDescriptionModel.listObjectsOfProperty(ResourceFactory.createResource(transformedByThingDescriptionIri), VicinityOntology.MAP_TD_HAS_ACCESS_MAPPING).toList());
+            if(accessMappingIris.isEmpty()){
+            		String warning1 = logMessage("[WARNING] No AccessMapping were found when virtualizing RDF using description '",transformedByThingDescriptionIri,"'");
+                log.warning(warning1);
             }else if(accessMappingIris.size()>1){
-                log.append("\n[WARNING] More than one AccessMapping were found when virtualizing rdf'");
+            		log.warning("[WARNING] More than one AccessMapping were found when virtualizing rdf");
             }else{
                 String accessMappingIri = accessMappingIris.get(0);
                 Model model = virtualizeRDF(thingDescriptionModel, blankIri, accessMappingIri, jsonPartition);
@@ -167,14 +168,21 @@ public class RDFVirtualizer {
             }
 
         }else{
-            log.append("\n[INFO] key received ").append(key).append(" is empty");
-            log.append("\n[INFO] TransformedBy received ").append(transformedByThingDescriptionIri).append(" is empty");
+        		String message1 = logMessage("[INFO] key received ",key," is empty");
+        		String message2 = logMessage("[INFO] TransformedBy received ",transformedByThingDescriptionIri," is empty");
+            log.info(message1);
+            log.info(message2);
         }
         return result;
     }
     
-    
-    
+    private String logMessage(String... args) {
+    		StringBuilder builder = new StringBuilder();
+    		int size = args.length;
+    		for(int index=0; index < size; index++)
+    			builder.append(args[index]);
+    		return builder.toString();
+    }
     
     
     // --------
@@ -186,26 +194,32 @@ public class RDFVirtualizer {
      * @return An array of JSON Documents that fulfil the json path
      */
     private JSONArray retrieveFilteredJsonArray(String json, String jsonPath){
-        String stringJsons;
-        if(jsonPath.length()>0) {
-            stringJsons = applyJsonPath(json, jsonPath);
-        }else{
-            StringBuilder filteredStringJsons = new StringBuilder();
-            
-            if(!json.startsWith("[") && !json.endsWith("]")) {
-            		filteredStringJsons.append("[").append(json).append("]");
-            }else {
-            	filteredStringJsons.append(json);
-            }
-            stringJsons = filteredStringJsons.toString();
-            
-        }
-        // Obtain the array
+    
         JSONArray filteredJsons = new JSONArray();
-        if(stringJsons!=null) {
-            filteredJsons = new JSONArray(stringJsons);
-        }else{
-            log.append("\n[ERROR] An error occurred with JSON Document: \n").append(json);
+        String stringJsons;
+        try {
+	        if(jsonPath.length()>0) {
+	            stringJsons = applyJsonPath(json, jsonPath);
+	        }else{
+	            StringBuilder filteredStringJsons = new StringBuilder();
+	            
+	            if(!json.startsWith("[") && !json.endsWith("]")) {
+	            		filteredStringJsons.append("[").append(json).append("]");
+	            }else {
+	            	filteredStringJsons.append(json);
+	            }
+	            stringJsons = filteredStringJsons.toString();
+	            
+	        }
+	    		// Obtain the array
+	        if(stringJsons!=null) {
+	            filteredJsons = new JSONArray(stringJsons);
+	        }else{
+	        		String logMessage = logMessage("[ERROR] An error occurred with JSON Document: \n",json);
+	            log.severe(logMessage);
+	        }
+        }catch(Exception e) {
+        		log.severe(e.toString());
         }
         return filteredJsons;
     }
@@ -216,7 +230,8 @@ public class RDFVirtualizer {
      * @param jsonPath A json path
      * @return A JSON document containing the data filtered by the json path
      */
-    private String applyJsonPath(String json, String jsonPath){
+    @SuppressWarnings("unchecked")
+	private String applyJsonPath(String json, String jsonPath){
         String stringJson = null;
         
         try {
@@ -224,8 +239,8 @@ public class RDFVirtualizer {
             if (value instanceof LinkedHashMap) {
                 JSONObject newJson = new JSONObject();
                 LinkedHashMap<String, String> jsonMap = (LinkedHashMap<String,String>) value;
-                for (String key : jsonMap.keySet()) {
-                    newJson.put(key, jsonMap.get(key));
+                for(Entry<String, String> entry : jsonMap.entrySet()) {
+                    newJson.put(entry.getKey(), entry.getValue());
                 }
                 StringBuilder buffer = new StringBuilder();
                 buffer.append("[").append(newJson.toString()).append("]");
@@ -233,10 +248,13 @@ public class RDFVirtualizer {
             } else if (value instanceof List) {
                 stringJson = value.toString();
             } else {
-                log.append("\n[WARNING] Unknown type found when applying the JSON Path '").append(jsonPath).append("' to the JSON Document: \n").append(json);
+            		String logWarning = logMessage("[WARNING] Unknown type found when applying the JSON Path '",jsonPath,"' to the JSON Document: \n",json);
+                log.warning(logWarning);
             }
         }catch (Exception e){
-           log.append("\n[WARNING] JSON Path \"").append(jsonPath).append("\" not applicable to JSON Document: \n").append(json);
+    		   String logWarning = logMessage("\n[WARNING] JSON Path \"",jsonPath+"\" not applicable to JSON Document: \n",json);
+           log.warning(logWarning);
+           log.severe(e.toString());
         }
 
         return stringJson;
@@ -251,28 +269,30 @@ public class RDFVirtualizer {
      * @param rdfData A jena Model containing the RDF data of the Mapping
      * @return A string containing the value of the input Property
      */
-    private String retrieveValuesOfMappingProperties(String mappingIri, String propertyIri, Model rdfData) {
+    private String retrieveValuesOfMappingProperties(String mappingIri, Property property, Model rdfData) {
         String value = null;
 
         Resource subject = ResourceFactory.createResource(mappingIri);
-        Property property = ResourceFactory.createProperty(propertyIri);
         List<RDFNode> valuesNodes = rdfData.listObjectsOfProperty(subject, property).toList();
         List<String> values = JenaUtils.fromRDFNodeToString(valuesNodes);
 
         if (values.size() > 1) {
-            log.append("\n[ERROR] More than one property value retrieved in mapping ").append(mappingIri);
+        		String logMessage = logMessage("[ERROR] More than one property value retrieved in mapping ",mappingIri);
+            log.severe(logMessage);
         } else if (values.isEmpty()){
             value ="";
-            if(propertyIri.contains("rootMode"))
+            if(property.getURI().contains("rootMode"))
                 value ="false";
         }else{
             value = values.get(0).trim();
-            if(value.equals("None") && propertyIri.contains("key")) {
+            if(value.equals("None") && property.getURI().contains("key")) {
                 value = "";
             }
         }
         return value;
     }
+    
+    
 
     /**
      * This method returns the types that a Mapping has, i.e., Mapping, DataProperty or ObjectProperty
@@ -282,7 +302,7 @@ public class RDFVirtualizer {
      */
     private List<String> retrieveMappingTypesFromThingDescription(String mappingIri, Model rdfData){
         Resource mappingIriResource = ResourceFactory.createResource(mappingIri);
-        Property typeProperty = Ontology.RDF_TYPE;
+        Property typeProperty = VicinityOntology.RDF_TYPE;
 
         List<RDFNode> typesNodes = rdfData.listObjectsOfProperty(mappingIriResource,typeProperty).toList();
 
@@ -297,7 +317,7 @@ public class RDFVirtualizer {
      */
     private Boolean isObjectPropertyMapping(String mappingIri, Model rdfData){
         List<String> types = retrieveMappingTypesFromThingDescription(mappingIri,rdfData);
-        return types.contains(Ontology.objectPropertyMappingType);
+        return types.contains(VicinityOntology.WOT_OBJECT_PROPERTY_MAPPING);
     }
 
 
