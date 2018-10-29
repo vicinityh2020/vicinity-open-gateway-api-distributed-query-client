@@ -1,7 +1,7 @@
+client/tmp/VicinityClientImpl.class
 client/model/Triple.class
 client/jena/JenaUtils.class
-client/VicinityClientImpl.class
 client/VicinityClient.class
-client/vocabullary/Ontology.class
 client/virtualizer/RDFVirtualizer.class
+client/VicinityOntology.class
 client/VicinityAgoraClient.class

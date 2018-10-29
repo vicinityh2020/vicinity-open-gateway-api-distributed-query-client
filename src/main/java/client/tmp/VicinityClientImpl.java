@@ -68,7 +68,7 @@ public class VicinityClientImpl {
 		// Retrieve from the Gateway API Services using a secured channel (datails)
 		Map<String, String> headers = new HashMap<String, String>();
         //headers.put("Content-Type", "application/ld+json"); .headers(headers)
-		String jsonTED = Unirest.post("http://gateway-services.vicinity.linkeddata.es/discovery").headers(headers).body(query).asJson().getBody().toString();
+		String jsonTED = Unirest.post("http://gateway-services.vicinity.linkeddata.es/discovery").headers(headers).body(query).asString().getBody().toString();
 		System.out.println(jsonTED);
 		Set<String> neighbours = new HashSet<String>();
 		/*neighbours.add("1b4fd2f0-e2ee-40aa-8a8a-e147f35e669a");

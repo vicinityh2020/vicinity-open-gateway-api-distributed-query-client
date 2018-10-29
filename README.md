@@ -7,6 +7,7 @@ Gateway API distributed query client implements the interoperability among Gatew
 
 ## Installation 
 
+### Compiling code
 Download the source code from the repository:
 
 ```
@@ -19,6 +20,29 @@ Then compile the source and build a jar file
 sudo mvn clean package
 ```
 Finally import the jar file that will be generated in the target folder to your project
+
+### As Maven Dependency
+
+Include the following statements in your pom.xml
+
+```
+ <repositories>
+        <repository>
+            <id>github.vicinity.distributed-query-client</id>
+            <url>https://github.com/vicinityh2020/vicinity-open-gateway-api-distributed-query-client/tree/maven</url>
+        </repository>
+</repositories>
+
+ <dependencies>
+        <dependency>
+            <groupId>vicinity.oeg.vicinity-open-gateway-api-distributed-query-client</groupId>
+    		<artifactId>vicinity-open-gateway-api-distributed-query-client</artifactId>
+    		<version>1.0</version>
+        </dependency>
+</dependencies>
+```
+
+Refresh your project maven dependencies
 
 ## Configuration 
 

@@ -1,7 +1,7 @@
 /Users/cimmino/workspace/vicinity/vicinity-open-gateway-api-distributed-query-client/src/main/java/client/VicinityAgoraClient.java
-/Users/cimmino/workspace/vicinity/vicinity-open-gateway-api-distributed-query-client/src/main/java/client/vocabullary/Ontology.java
+/Users/cimmino/workspace/vicinity/vicinity-open-gateway-api-distributed-query-client/src/main/java/client/VicinityOntology.java
 /Users/cimmino/workspace/vicinity/vicinity-open-gateway-api-distributed-query-client/src/main/java/client/virtualizer/RDFVirtualizer.java
 /Users/cimmino/workspace/vicinity/vicinity-open-gateway-api-distributed-query-client/src/main/java/client/VicinityClient.java
-/Users/cimmino/workspace/vicinity/vicinity-open-gateway-api-distributed-query-client/src/main/java/client/VicinityClientImpl.java
+/Users/cimmino/workspace/vicinity/vicinity-open-gateway-api-distributed-query-client/src/main/java/client/tmp/VicinityClientImpl.java
 /Users/cimmino/workspace/vicinity/vicinity-open-gateway-api-distributed-query-client/src/main/java/client/model/Triple.java
 /Users/cimmino/workspace/vicinity/vicinity-open-gateway-api-distributed-query-client/src/main/java/client/jena/JenaUtils.java
