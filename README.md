@@ -26,20 +26,22 @@ Finally import the jar file that will be generated in the target folder to your 
 Include the following statements in your pom.xml
 
 ```
- <repositories>
-        <repository>
-            <id>github.vicinity.distributed-query-client</id>
-            <url>https://github.com/vicinityh2020/vicinity-open-gateway-api-distributed-query-client/tree/maven</url>
-        </repository>
+<repositories>
+       <repository>
+              <id>jitpack.io</id>
+              <url>https://jitpack.io</url>
+       </repository>
 </repositories>
-
- <dependencies>
+<dependencies>
+        <dependencies>
+        <!-- Gateway API Services -->
         <dependency>
-            <groupId>vicinity.oeg.vicinity-open-gateway-api-distributed-query-client</groupId>
-    		<artifactId>vicinity-open-gateway-api-distributed-query-client</artifactId>
-    		<version>1.0</version>
+            <groupId>com.github.vicinityh2020</groupId>
+            <artifactId>vicinity-open-gateway-api-distributed-query-client</artifactId>
+             <version>1.0</version>
         </dependency>
 </dependencies>
+
 ```
 
 Refresh your project maven dependencies
