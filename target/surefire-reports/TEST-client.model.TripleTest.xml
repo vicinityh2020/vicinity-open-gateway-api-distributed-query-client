@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite tests="5" failures="0" name="client.model.TripleTest" time="0.002" errors="0" skipped="0">
+<testsuite tests="5" failures="0" name="client.model.TripleTest" time="0.001" errors="0" skipped="0">
   <properties>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
     <property name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_151.jdk/Contents/Home/jre/lib"/>
@@ -27,7 +27,7 @@
 "/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="os.name" value="Mac OS X"/>
-    <property name="classworlds.conf" value="/Users/cimmino/workspace/toDelete/.metadata/.plugins/org.eclipse.m2e.launching/launches/m2conf944915156482493982.tmp"/>
+    <property name="classworlds.conf" value="/Users/cimmino/workspace/toDelete/.metadata/.plugins/org.eclipse.m2e.launching/launches/m2conf5912318832288711725.tmp"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
     <property name="java.library.path" value="/Users/cimmino/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
@@ -67,5 +67,5 @@
   <testcase classname="client.model.TripleTest" name="test2" time="0"/>
   <testcase classname="client.model.TripleTest" name="test3" time="0"/>
   <testcase classname="client.model.TripleTest" name="test4" time="0"/>
-  <testcase classname="client.model.TripleTest" name="test5" time="0.001"/>
+  <testcase classname="client.model.TripleTest" name="test5" time="0"/>
 </testsuite>

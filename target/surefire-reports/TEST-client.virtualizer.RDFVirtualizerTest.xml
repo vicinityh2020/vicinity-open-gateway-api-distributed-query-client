@@ -27,7 +27,7 @@
 "/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="os.name" value="Mac OS X"/>
-    <property name="classworlds.conf" value="/Users/cimmino/workspace/toDelete/.metadata/.plugins/org.eclipse.m2e.launching/launches/m2conf944915156482493982.tmp"/>
+    <property name="classworlds.conf" value="/Users/cimmino/workspace/toDelete/.metadata/.plugins/org.eclipse.m2e.launching/launches/m2conf5912318832288711725.tmp"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
     <property name="java.library.path" value="/Users/cimmino/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
@@ -63,6 +63,6 @@
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="sun.cpu.isalist" value=""/>
   </properties>
-  <testcase classname="client.virtualizer.RDFVirtualizerTest" name="test1" time="0.004"/>
-  <testcase classname="client.virtualizer.RDFVirtualizerTest" name="test2" time="0.038"/>
+  <testcase classname="client.virtualizer.RDFVirtualizerTest" name="test1" time="0.006"/>
+  <testcase classname="client.virtualizer.RDFVirtualizerTest" name="test2" time="0.036"/>
 </testsuite>
