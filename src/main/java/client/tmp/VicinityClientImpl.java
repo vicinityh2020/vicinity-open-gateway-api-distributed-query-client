@@ -52,22 +52,36 @@ public class VicinityClientImpl {
 				"prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" + 
 				"prefix map: <http://iot.linkeddata.es/def/wot-mappings#> \n" + 
 				"\n" + 
-				"SELECT DISTINCT ?things ?interactionName ?observed  WHERE {\n" +  //
-				"       ?things rdf:type wot:Thing . \n" +
-				"		?things core:represents ?object . \n" +
+				"SELECT DISTINCT ?interactionName ?observed  WHERE {\n" +  //
+				"       <http://vicinity.eu/data/things/c0d66ac6-b952-458f-8bb6-0ceea539b082> rdf:type wot:Thing . \n" +
+				"		<http://vicinity.eu/data/things/c0d66ac6-b952-458f-8bb6-0ceea539b082> core:represents ?object . \n" +
 				//"       ?object rdf:type ?type .\n" + 
-				"       	?things wot:providesInteractionPattern ?patterns . \n"+
+				"       	<http://vicinity.eu/data/things/c0d66ac6-b952-458f-8bb6-0ceea539b082> wot:providesInteractionPattern ?patterns . \n"+
 				"       	?patterns wot:interactionName ?interactionName . \n"+
 				"       	?patterns sosa:observes ?observed . \n"+
 				//"       ?object wot:thingName ?name . \n"+
 				//"		FILTER regex(str(?type), \"adapters\") .\n"+
+				"}";
+		
+		query  = "prefix wot: <http://iot.linkeddata.es/def/wot#>\n" + 
+				"prefix core: <http://iot.linkeddata.es/def/core#>\n" + 
+				"prefix foaf: <http://xmlns.com/foaf/0.1/>\n" + 
+				"prefix sosa: <http://www.w3.org/ns/sosa/>\n" + 
+				"prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>\n" + 
+				"prefix ssn: <http://www.w3.org/ns/ssn/>\n" + 
+				"prefix adp: <http://iot.linkeddata.es/def/adapters#> \n" + 
+				"prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" + 
+				"prefix map: <http://iot.linkeddata.es/def/wot-mappings#> \n" + 
+				"\n" + 
+				"SELECT DISTINCT ?p ?o  WHERE {\n" +  //
+				"       <http://vicinity.eu/data/things/c0d66ac6-b952-458f-8bb6-0ceea539b082> ?p ?o . \n" +
 				"}";
 	
 		
 		long startTime = System.currentTimeMillis();
 		// Retrieve from the Gateway API Services using a secured channel (datails)
 		Map<String, String> headers = new HashMap<String, String>();
-        //headers.put("Content-Type", "application/ld+json"); .headers(headers)
+        //headers.put("Content-Type", "application/ld+json"); .headers(headers) 
 		String jsonTED = Unirest.post("http://vicinity-gateway-services.vicinity.linkeddata.es/discovery").headers(headers).body(query).asString().getBody().toString();
 		System.out.println(">"+jsonTED);
 		Set<String> neighbours = new HashSet<String>();
