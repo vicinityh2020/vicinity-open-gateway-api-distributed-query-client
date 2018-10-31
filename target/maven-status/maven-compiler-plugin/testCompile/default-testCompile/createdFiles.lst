@@ -1,5 +1,0 @@
-test/client/VicinityOntologyTest.class
-client/jena/TestJenaUtils.class
-client/virtualizer/RDFVirtualizerTest.class
-test/client/VicinityAgoraClientTest.class
-client/model/TripleTest.class

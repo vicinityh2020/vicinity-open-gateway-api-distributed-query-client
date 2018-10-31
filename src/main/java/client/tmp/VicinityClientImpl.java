@@ -74,7 +74,8 @@ public class VicinityClientImpl {
 				"prefix map: <http://iot.linkeddata.es/def/wot-mappings#> \n" + 
 				"\n" + 
 				"SELECT DISTINCT ?p ?o  WHERE {\n" +  //
-				"       <http://vicinity.eu/data/things/c0d66ac6-b952-458f-8bb6-0ceea539b082> ?p ?o . \n" +
+				"       ?s rdf:type wot:Thing . \n" +
+				"       ?s ?p ?o . \n" +
 				"}";
 	
 		
