@@ -42,7 +42,7 @@ public class VicinityAgoraClient implements VicinityClient {
      */
     public VicinityAgoraClient(String jsonTed, Set<String> neighbours, String query){
     		Model ted = JenaUtils.parseRDF(jsonTed, VicinityOntology.JSONLD);
-    		filteredStaticRDF = ted;//filterTedByNeighbours(ted, neighbours);
+    		filteredStaticRDF = filterTedByNeighbours(ted, neighbours);
     		queryString = query;
     		this.virtualizer = new RDFVirtualizer();
     }

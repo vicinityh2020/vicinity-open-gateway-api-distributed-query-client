@@ -73,17 +73,16 @@ public class VicinityClientImpl {
 				"prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" + 
 				"prefix map: <http://iot.linkeddata.es/def/wot-mappings#> \n" + 
 				"\n" + 
-				"SELECT DISTINCT ?p ?o  WHERE {\n" +  //
+				"SELECT DISTINCT ?s WHERE {\n" +  //
 				"       ?s rdf:type wot:Thing . \n" +
-				"       ?s ?p ?o . \n" +
 				"}";
 	
 		
 		long startTime = System.currentTimeMillis();
 		// Retrieve from the Gateway API Services using a secured channel (datails)
 		Map<String, String> headers = new HashMap<String, String>();
-        //headers.put("Content-Type", "application/ld+json"); .headers(headers) 
-		String jsonTED = Unirest.post("http://vicinity-gateway-services.vicinity.linkeddata.es/discovery").headers(headers).body(query).asString().getBody().toString();
+        //headers.put("Content-Type", "application/ld+json"); .headers(headers) /vicinity-
+		String jsonTED = Unirest.post("http://gateway-services.vicinity.linkeddata.es/discovery").headers(headers).body(query).asString().getBody();
 		System.out.println(">"+jsonTED);
 		Set<String> neighbours = new HashSet<String>();
 		// production CERTH
@@ -145,8 +144,5 @@ public class VicinityClientImpl {
 	     System.out.println("->"+elapsedTime/60000);
 	}
 	
-	public static String get(String iri) {
-		System.out.println(iri);
-		return "{}";
-	}
+
 }
