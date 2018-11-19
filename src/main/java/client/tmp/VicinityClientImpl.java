@@ -73,20 +73,25 @@ public class VicinityClientImpl {
 				"prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" + 
 				"prefix map: <http://iot.linkeddata.es/def/wot-mappings#> \n" + 
 				"\n" + 
-				"SELECT DISTINCT ?s WHERE {\n" +  //
-				"       ?s rdf:type wot:Thing . \n" +
-				"}";
+				"select distinct ?thing ?clazz ?value where {\n" + 
+				"       ?thing rdf:type wot:Thing .\n" + 
+				"       ?thing core:represents ?object .\n" + 
+				"       ?object rdf:type ?clazz .\n" + 
+				"       ?thing wot:providesInteractionPattern ?pattern .\n" + 
+				"       ?pattern core:hasValue ?valueResource .\n" + 
+				//"       optional { ?valueResource core:literalValue ?value .} \n" + 
+				"} LIMIT 5";
 	
 		
 		long startTime = System.currentTimeMillis();
 		// Retrieve from the Gateway API Services using a secured channel (datails)
 		Map<String, String> headers = new HashMap<String, String>();
-        //headers.put("Content-Type", "application/ld+json"); .headers(headers) /vicinity-
-		String jsonTED = Unirest.post("http://gateway-services.vicinity.linkeddata.es/discovery").headers(headers).body(query).asString().getBody();
+        //headers.put("Content-Type", "application/ld+json"); .headers(headers) /vicinity- advanced-discovery
+		String jsonTED = Unirest.post("http://localhost:8081/advanced-discovery?neighbors=dXBtLXd-lYXRoZX-Itc2VydmljZQ").headers(headers).body(query).asString().getBody();
 		System.out.println(">"+jsonTED);
 		Set<String> neighbours = new HashSet<String>();
 		// production CERTH
-		neighbours.add("c8269833-578d-42c0-814c-1b24d644b350");
+		/*neighbours.add("c8269833-578d-42c0-814c-1b24d644b350");
 		neighbours.add("6967e210-e1e8-4a1d-9fd8-4a40cd8df41b");
 		neighbours.add("3d3bcd90-27cc-4f07-91d6-f76d36c789c1");
 		// Dev
@@ -119,7 +124,7 @@ public class VicinityClientImpl {
 		neighbours.add("34730b62-097a-4bde-a298-e0bcbcab2bd1");
 		neighbours.add("6f7b08b2-fd41-4037-870a-a530cf14b9ae");
 		neighbours.add("4f75dd67-9bc1-41db-be2c-7e1829dd4d48");
-		neighbours.add("636c2fde-50d4-4fb2-9fa0-d758591d19b0");
+		neighbours.add("636c2fde-50d4-4fb2-9fa0-d758591d19b0");*/
 		// Our vas
 		neighbours.add("dXBtLXd-lYXRoZX-Itc2VydmljZQ");
 		// -- Init the client

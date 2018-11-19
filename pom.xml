@@ -14,13 +14,7 @@
     			<github.global.server>github.vicinity.distributed-query-client</github.global.server>
 	  </properties>
 
-	<!-- Maven repository 
-	<repositories>
-		<repository>
-			<id>github.vicinity.distributed-query-client</id>
-			<url>https://github.com/vicinityh2020/vicinity-open-gateway-api-distributed-query-client/tree/maven</url>
-		</repository>
-	</repositories>-->
+
 
     <dependencies>
         <!-- Jena basic libraries (all in one): https://mvnrepository.com/artifact/org.apache.jena/apache-jena-libs -->
@@ -31,12 +25,6 @@
             <type>pom</type>
         </dependency>
 
-        <!-- Json -->
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20140107</version>
-        </dependency>
 
         <!-- JsonPath: https://github.com/json-path/JsonPath -->
         <dependency>
