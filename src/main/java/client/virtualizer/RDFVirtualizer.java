@@ -96,7 +96,7 @@ public class RDFVirtualizer {
         String property = retrieveValuesOfMappingProperties(mappingIri, VicinityOntology.MAP_PREDICATE, thingDescriptionModel);
         String jsonPath = retrieveValuesOfMappingProperties(mappingIri, VicinityOntology.MAP_JSONPATH, thingDescriptionModel);
         String transformedByThingDescriptionIri = retrieveValuesOfMappingProperties(mappingIri, VicinityOntology.MAP_VALUES_TRANSFORMED_BY, thingDescriptionModel); // point the thingDescription from the transformedBy mapping
-       
+    
         // Filter the received json if there is a jsonPath
         	JSONArray filteredJsons = retrieveFilteredJsonArray(jsonData, jsonPath);
         for (int index = 0; index < filteredJsons.length(); index++) {
@@ -129,6 +129,8 @@ public class RDFVirtualizer {
     
     private Model processJSONObject(JSONObject filteredJson, String key, String transformedByThingDescriptionIri, String property, String mappingIri, Resource thingResource, Model thingDescriptionModel) {
     		Model result = ModelFactory.createDefaultModel();
+    		if(!key.startsWith("$."))
+    			key = ("$.").concat(key);
         if(transformedByThingDescriptionIri.length()==0 && key.length()>0) {
             // Plain Case: Data Property
             if(filteredJson!=null && filteredJson.keySet().contains(key)){
@@ -213,6 +215,7 @@ public class RDFVirtualizer {
 	        }
 	    		// Obtain the array
 	        if(stringJsons!=null) {
+	        	
 	            filteredJsons = new JSONArray(stringJsons);
 	        }else{
 	        		String logMessage = logMessage("[ERROR] An error occurred with JSON Document: \n",json);
@@ -220,6 +223,7 @@ public class RDFVirtualizer {
 	        }
         }catch(Exception e) {
         		log.severe(e.toString());
+        		e.printStackTrace();
         }
         return filteredJsons;
     }
