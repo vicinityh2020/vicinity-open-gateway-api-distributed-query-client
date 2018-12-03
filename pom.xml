@@ -48,8 +48,11 @@
     </dependencies>
 
 
-  <build>
-        <plugins>
+
+	<build>
+	    <plugins>
+	       
+        <!-- Plygin for deply the system -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -65,16 +68,16 @@
                 <configuration>
                     <altDeploymentRepository>internal.repo::default::file://${project.basedir}/../${project.name}-mvn-repo</altDeploymentRepository>
                 </configuration>
-            </plugin>
+            </plugin> 
         </plugins>
     </build>
     
     <distributionManagement>
-    <repository>
-        <id>internal.repo</id>
-        <name>Temporary Staging Repository</name>
-        <url>file://${project.basedir}/../${project.name}-mvn-repo</url>
-    </repository>
-</distributionManagement>
+	    <repository>
+	        <id>internal.repo</id>
+	        <name>Temporary Staging Repository</name>
+	        <url>file://${project.basedir}/../${project.name}-mvn-repo</url>
+	    </repository>
+	</distributionManagement>
 	
 </project>

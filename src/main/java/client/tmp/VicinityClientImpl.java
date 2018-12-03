@@ -87,7 +87,7 @@ public class VicinityClientImpl {
 		// Retrieve from the Gateway API Services using a secured channel (datails)
 		Map<String, String> headers = new HashMap<String, String>();
         //headers.put("Content-Type", "application/ld+json"); .headers(headers) /vicinity- advanced-discovery
-		String jsonTED = Unirest.post("http://localhost:8081/advanced-discovery?neighbors=dXBtLXd-lYXRoZX-Itc2VydmljZQ").headers(headers).body(query).asString().getBody();
+		String jsonTED = Unirest.post("http://vicinity-gateway-services.vicinity.linkeddata.es/advanced-discovery?neighbors=2331930e-b78c-499e-8236-cbb38c19d9a2,da494aa6-dc83-416c-86c9-8fb2f289274f,0253cebb-70b3-4f0b-9dff-bcbb4b1e2d4d,99a08321-2856-4b68-ad27-7289d97fffb7,5c390a78-e5df-415c-8de6-d76f9d3a67cb,a0e7e46f-0f56-4c93-abdf-8a00f96c717f,53a1fe3a-e03c-4c75-bf03-1406a7d19ef3,37e70df2-ec8e-4331-8745-3312e0d879d7,31606ec3-ddbd-40d9-ba13-9627495a419b,d2e5db62-2c12-4103-b6f0-3b92edbfe35d,016226ab-b24e-423f-971e-4d12dcf39aa3,be613d35-b98a-4c2c-b429-f97838be92e2,c8269833-578d-42c0-814c-1b24d644b350,4699bb54-e5bd-4845-ab9c-50eb112e2f3a,5d5040d5-45dc-4000-ac00-fd0928238d85,f4d8b6b9-7ef0-410f-9cde-e999f2aba5d3,46f472bf-5e56-495c-b909-f56efbe58413,6b374e02-429a-4634-a6b0-43b0bc05633d,5055aed3-a367-4c70-877d-096ffab75c6b").headers(headers).body(query).asString().getBody();
 		System.out.println(">"+jsonTED);
 		Set<String> neighbours = new HashSet<String>();
 		// production CERTH
