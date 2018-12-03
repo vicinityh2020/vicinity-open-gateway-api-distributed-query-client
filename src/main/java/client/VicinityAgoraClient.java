@@ -32,7 +32,9 @@ public class VicinityAgoraClient implements VicinityClient {
     private String queryString;
 	private Logger log = Logger.getLogger(VicinityAgoraClient.class.getName());
 	private Model filteredStaticRDF;
-    
+  
+	
+	
 	// -- Contructors
 	
 	/**
@@ -41,10 +43,25 @@ public class VicinityAgoraClient implements VicinityClient {
      * @param neighbours A set of neighbour oid
      */
     public VicinityAgoraClient(String jsonTed, Set<String> neighbours, String query){
-    		Model ted = JenaUtils.parseRDF(jsonTed, VicinityOntology.JSONLD);
-    		filteredStaticRDF = filterTedByNeighbours(ted, neighbours);
-    		queryString = query;
     		this.virtualizer = new RDFVirtualizer();
+    		if(isSparqlQuery(query))
+        		queryString = query;	
+    		Model ted = JenaUtils.parseRDF(jsonTed, VicinityOntology.JSONLD);
+    		if(!ted.isEmpty()) 
+    			filteredStaticRDF = filterTedByNeighbours(ted, neighbours);
+    		
+
+    }
+    
+    private Boolean isSparqlQuery(String queryString) {
+    		Boolean isSparql =false;
+    		try {
+    			QueryFactory.create(queryString);
+    			isSparql = true;
+    		}catch(Exception e) {
+    			log.severe("Provided sparql query has sintax problems, check it out: "+queryString);
+    		}
+    		return isSparql;
     }
     
     // -- Methods
@@ -84,32 +101,31 @@ public class VicinityAgoraClient implements VicinityClient {
     
     
     // -- Iteratively discovery
-    
-    /* (non-Javadoc)
-	 * @see client.VicinityClient#getRelevantGatewayAPIAddresses()
-	 */
+
     public List<Entry<String, String>> getRelevantGatewayAPIAddresses(){
-    		List<Entry<String, String>> remoteEndpoints = new ArrayList<Entry<String, String>>();
+    		List<Entry<String, String>> remoteEndpoints = new ArrayList<>();
     		// 1. Check that query requires to access real-time distributed data
-    		Boolean gatherRemoteEndpoints = VicinityOntology.areRemoteEnpointsRequired(this.queryString);
-    		if(gatherRemoteEndpoints) {
-    			// 1.A if that's the case retrieve first all the map:AccessMapping resources
-    			NodeIterator accessMappings = this.filteredStaticRDF.listObjectsOfProperty(VicinityOntology.MAP_TD_HAS_ACCESS_MAPPING);
-    			while(accessMappings.hasNext()) {
-    				// 1.A.1 For each map:AccessMapping extract its IRI, RDF, and remote endpoint Link
-    				Node accessMappingNode = accessMappings.next().asNode();
-    				Model accessMappingRDF = JenaUtils.extractFullSubTree(accessMappingNode, this.filteredStaticRDF);
-    				String accessMappingRDFString = JenaUtils.toString(accessMappingRDF);
-    				List<String> remoteEndpointAddresses = extractRemoteAddresses(accessMappingRDF);
-    				// 1.A.2 Add each remote endpoint Link found to the output variable, consider that each endpoint will be associated to the map:AccessMapping RDF
-    				int remoteAddressesSize = remoteEndpointAddresses.size();
-    				for(int remoteAddressIndex=0; remoteAddressIndex < remoteAddressesSize; remoteAddressIndex++)
-    					remoteEndpoints.add(new AbstractMap.SimpleEntry<String, String>(accessMappingRDFString,remoteEndpointAddresses.get(remoteAddressIndex)));
-    			}
+    		if(this.queryString!=null && filteredStaticRDF!=null && !filteredStaticRDF.isEmpty()) {
+	    		Boolean gatherRemoteEndpoints = VicinityOntology.areRemoteEnpointsRequired(this.queryString);
+	    		if(gatherRemoteEndpoints) {
+	    			// 1.A if that's the case retrieve first all the map:AccessMapping resources
+	    			NodeIterator accessMappings = this.filteredStaticRDF.listObjectsOfProperty(VicinityOntology.MAP_TD_HAS_ACCESS_MAPPING);
+	    			while(accessMappings.hasNext()) {
+	    				// 1.A.1 For each map:AccessMapping extract its IRI, RDF, and remote endpoint Link
+	    				Node accessMappingNode = accessMappings.next().asNode();
+	    				Model accessMappingRDF = JenaUtils.extractFullSubTree(accessMappingNode, this.filteredStaticRDF);
+	    				String accessMappingRDFString = JenaUtils.toString(accessMappingRDF);
+	    				List<String> remoteEndpointAddresses = extractRemoteAddresses(accessMappingRDF);
+	    				// 1.A.2 Add each remote endpoint Link found to the output variable, consider that each endpoint will be associated to the map:AccessMapping RDF
+	    				int remoteAddressesSize = remoteEndpointAddresses.size();
+	    				for(int remoteAddressIndex=0; remoteAddressIndex < remoteAddressesSize; remoteAddressIndex++)
+	    					remoteEndpoints.add(new AbstractMap.SimpleEntry<String, String>(accessMappingRDFString,remoteEndpointAddresses.get(remoteAddressIndex)));
+	    			}
+	    		}
+	    		
+	    		if(remoteEndpoints.isEmpty()) 
+	    			log.info("No remote endpoints are required to solve this query");
     		}
-    		if(remoteEndpoints.isEmpty()) 
-    			log.info("No remote endpoints are required to solve this query");
-    		
     			
     		return remoteEndpoints;
     }
@@ -122,7 +138,7 @@ public class VicinityAgoraClient implements VicinityClient {
      * @return A collection of hrefs referenced in the input mapping
      */
     private List<String> extractRemoteAddresses(Model rdf) {
-		List<String> remoteAddresses = new ArrayList<String>();
+		List<String> remoteAddresses = new ArrayList<>();
 		NodeIterator remoteLinks = rdf.listObjectsOfProperty(ResourceFactory.createProperty(VicinityOntology.WOT_MAPPING_MAPS_RESOURCES_FROM));
 		while(remoteLinks.hasNext()) {
 			RDFNode rdfNode = remoteLinks.next();
@@ -245,27 +261,31 @@ public class VicinityAgoraClient implements VicinityClient {
      */
     private List<Map<String,String>> executeQuery(String queryString, Model model){
         List<Map<String,String>> queryResults = new ArrayList<Map<String, String>>();
-        Query query = QueryFactory.create(queryString) ;
-        try {
-            QueryExecution qexec = QueryExecutionFactory.create(query, model);
-            ResultSet results = qexec.execSelect() ;
-            List<String> variables = results.getResultVars();
-            while (results.hasNext()) {
-                QuerySolution soln = results.nextSolution() ; // Query solution
-                Map<String,String> queryResult = new HashMap<String, String>();
-                // Transform to map the solution
-                for(String variable:variables){
-                    if(soln.contains(variable))
-                        queryResult.put(variable, soln.get(variable).toString());
-                }
-                if(queryResult.size()>0)
-                    queryResults.add(queryResult);
-            }
-            
-            qexec.close();
-            
-        }catch (Exception e){
-            log.severe(e.toString());
+        if(model!=null && !model.isEmpty()) {
+	        try {
+	        		Query query = QueryFactory.create(queryString) ;
+	            QueryExecution qexec = QueryExecutionFactory.create(query, model);
+	            ResultSet results = qexec.execSelect() ;
+	            List<String> variables = results.getResultVars();
+	            while (results.hasNext()) {
+	                QuerySolution soln = results.nextSolution() ; // Query solution
+	                Map<String,String> queryResult = new HashMap<String, String>();
+	                // Transform to map the solution
+	                for(String variable:variables){
+	                    if(soln.contains(variable))
+	                        queryResult.put(variable, soln.get(variable).toString());
+	                }
+	                if(queryResult.size()>0)
+	                    queryResults.add(queryResult);
+	            }
+	            
+	            qexec.close();
+	            
+	        }catch (Exception e){
+	            log.severe(e.toString());
+	        }
+        }else {
+        		log.severe("Cannot resolve query over null or empty Ted response");
         }
         return queryResults;
     }

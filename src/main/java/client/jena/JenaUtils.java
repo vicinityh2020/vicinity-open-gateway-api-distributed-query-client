@@ -120,7 +120,7 @@ public class JenaUtils {
 			 InputStream is = new ByteArrayInputStream( strRDF.getBytes() );
 			 parsedModel.read(is, null, format);
     		}catch(Exception e) {
-    			String message = ("Something went wrong parsing RDF\n").concat(e.toString());
+    			String message = ("Prodvided RDF has syntax errors, check it out:").concat(strRDF);
     			log.severe(message);
     		}
 		return parsedModel;
