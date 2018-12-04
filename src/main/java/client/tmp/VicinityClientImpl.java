@@ -29,31 +29,40 @@ public class VicinityClientImpl {
 				"prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" + 
 				"prefix map: <http://iot.linkeddata.es/def/wot-mappings#> \n" + 
 				"\n" + 
-				"select distinct ?thing ?clazz ?value where {\n" + 
+				"select distinct ?thing ?clazz ?interactionName ?observes ?realTimeValue ?mappingTokey where {\n" + 
 				"       ?thing rdf:type wot:Thing .\n" + 
 				"       ?thing core:represents ?object .\n" + 
 				"       ?object rdf:type ?clazz .\n" + 
-				"       ?thing wot:providesInteractionPattern ?pattern .\n" + 
-				"       ?pattern core:hasValue ?valueResource .\n" + 
-				//"       optional { ?valueResource core:literalValue ?value .} \n" + 
-				"} LIMIT 5";
+				"	   ?thing wot:providesInteractionPattern ?pattern .\n" + 
+				"       ?pattern sosa:observes ?observes .\n" + 
+				"       ?pattern wot:interactionName ?interactionName .\n" + 
+				"       ?pattern core:hasValue ?hasValue .\n" + 
+				"       ?hasValue core:isDescribedBy ?TD .\n" + 
+				"       OPTIONAL { ?hasValue core:literalValue ?realTimeValue . }\n" + 
+				"       ?TD map:hasAccessMapping ?accessMapping .\n" + 
+				"       ?accessMapping map:mapsResourcesFrom ?endpoint .\n" + 
+				"       OPTIONAL{  ?accessMapping map:hasMapping ?mapping . ?mapping <http://iot.linkeddata.es/def/wot-mappings#key> ?mappingTokey }\n" + 
+				"       ?endpoint wot:href ?endpointAddress .\n" + 
+				"       FILTER (!isBlank(?clazz))\n" + 
+				"}";
 	
 		
 		long startTime = System.currentTimeMillis();
 		// Retrieve from the Gateway API Services using a secured channel (datails)
-		String jsonTED = Unirest.post("http://localhost:8081/advanced-discovery?neighbors=46f472bf-5e56-495c-b909-f56efbe58413").body(query).asString().getBody();
-		System.out.println(">"+jsonTED);
+		String jsonTED = Unirest.post("http://vicinity-gateway-services.vicinity.linkeddata.es/advanced-discovery?neighbors=46f472bf-5e56-495c-b909-f56efbe58413").body(query).asString().getBody();
+		//System.out.println(">"+jsonTED);
 		Set<String> neighbours = new HashSet<String>();
 		neighbours.add("46f472bf-5e56-495c-b909-f56efbe58413");
 		
 		VicinityClient client = new VicinityAgoraClient(jsonTED, neighbours, query);
 
 		List<Entry<String,String>> remoteEndpoints = client.getRelevantGatewayAPIAddresses();
-		System.out.println(remoteEndpoints);
+		//System.out.println(">>>>"+remoteEndpoints);
 		int size = remoteEndpoints.size();
 		for(int index=0; index < size; index++) {
 			//String jsonDocument = "{\"data\":{\"echo\":\"get property\",\"pid\":\"prop-1\",\"oid\":\"test-agora-1\"},\"status\":\""+Math.random()+"\"}";
 			System.out.println("\t>"+remoteEndpoints.get(index).getValue());
+			System.out.println("\t]>"+remoteEndpoints.get(index).getKey());
 			remoteEndpoints.get(index).setValue("{\"detected\":true}");
 			//remoteEndpoints.get(index).setValue(jsonDocument);
 		}

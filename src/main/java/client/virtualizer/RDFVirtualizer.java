@@ -129,8 +129,7 @@ public class RDFVirtualizer {
     
     private Model processJSONObject(JSONObject filteredJson, String key, String transformedByThingDescriptionIri, String property, String mappingIri, Resource thingResource, Model thingDescriptionModel) {
     		Model result = ModelFactory.createDefaultModel();
-    		if(!key.startsWith("$."))
-    			key = ("$.").concat(key);
+   
         if(transformedByThingDescriptionIri.length()==0 && key.length()>0) {
             // Plain Case: Data Property
             if(filteredJson!=null && filteredJson.keySet().contains(key)){
