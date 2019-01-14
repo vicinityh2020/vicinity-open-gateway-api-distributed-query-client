@@ -10,8 +10,8 @@
 		    <maven.compiler.target>1.8</maven.compiler.target>
 		    	<maven.compiler.source>1.8</maven.compiler.source>  
 		    	<java.version>1.8</java.version>
-		    	<!-- github server corresponds to entry in ~/.m2/settings.xml -->
-    			<github.global.server>github.vicinity.distributed-query-client</github.global.server>
+		    	<!-- github server corresponds to entry in ~/.m2/settings.xml
+    			<github.global.server>github.vicinity.distributed-query-client</github.global.server> -->
 	  </properties>
 
 
@@ -39,20 +39,22 @@
 			<artifactId>unirest-java</artifactId>
 			<version>1.4.9</version>
 		</dependency>
+		
 		<!-- JUnit -->
 		<dependency>
 		  <groupId>junit</groupId>
 		  <artifactId>junit</artifactId>
 		  <version>4.12</version>
 		</dependency>
+		
     </dependencies>
 
 
 
-	<build>
+	<!--<build>
 	    <plugins>
 	       
-        <!-- Plygin for deply the system -->
+         Plygin for deply the system 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -78,6 +80,6 @@
 	        <name>Temporary Staging Repository</name>
 	        <url>file://${project.basedir}/../${project.name}-mvn-repo</url>
 	    </repository>
-	</distributionManagement>
+	</distributionManagement>-->
 	
 </project>
