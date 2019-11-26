@@ -133,11 +133,8 @@ public class RDFVirtualizer {
         if(transformedByThingDescriptionIri.length()==0 && key.length()>0) {
             // Plain Case: Data Property
             if(filteredJson!=null && filteredJson.keySet().contains(key)){
-                String jsonValue = String.valueOf(filteredJson.get(key.trim()));
-                // If the mapping is an object property with no transformedBy then the value contained in the json is virtualized as a resource
-                RDFNode node = ResourceFactory.createStringLiteral(jsonValue);
-                if(isObjectPropertyMapping(mappingIri, thingDescriptionModel))
-                    node = ResourceFactory.createResource(jsonValue);
+        			// If the mapping is an object property with no transformedBy then the value contained in the json is virtualized as a resource
+            		RDFNode node = solvePlainCase(filteredJson, key,mappingIri, thingDescriptionModel);
                 result.add(thingResource, ResourceFactory.createProperty(property), node);
             }else{
             		String filteredJsonString = "";
@@ -154,7 +151,6 @@ public class RDFVirtualizer {
                 jsonPartition = String.valueOf(filteredJson.get(key));
 
             String blankIri =  NodeFactory.createBlankNode().toString();
-            
             List<String> accessMappingIris = JenaUtils.fromRDFNodeToString(thingDescriptionModel.listObjectsOfProperty(ResourceFactory.createResource(transformedByThingDescriptionIri), VicinityOntology.MAP_TD_HAS_ACCESS_MAPPING).toList());
             if(accessMappingIris.isEmpty()){
             		String warning1 = logMessage("[WARNING] No AccessMapping were found when virtualizing RDF using description '",transformedByThingDescriptionIri,"'");
@@ -169,12 +165,26 @@ public class RDFVirtualizer {
             }
 
         }else{
-        		String message1 = logMessage("[INFO] key received ",key," is empty");
-        		String message2 = logMessage("[INFO] TransformedBy received ",transformedByThingDescriptionIri," is empty");
-            log.info(message1);
-            log.info(message2);
+        	reportError(key, transformedByThingDescriptionIri);
         }
         return result;
+    }
+    
+    private void reportError(String key, String transformedByThingDescriptionIri) {
+    	String message1 = logMessage("[INFO] key received ",key," is empty");
+		String message2 = logMessage("[INFO] TransformedBy received ",transformedByThingDescriptionIri," is empty");
+    log.info(message1);
+    log.info(message2);
+    }
+    
+    
+    
+    private RDFNode solvePlainCase(JSONObject filteredJson, String key,String mappingIri, Model thingDescriptionModel) {
+    		String jsonValue = String.valueOf(filteredJson.get(key.trim()));
+        RDFNode node = ResourceFactory.createStringLiteral(jsonValue);
+        if(isObjectPropertyMapping(mappingIri, thingDescriptionModel))
+            node = ResourceFactory.createResource(jsonValue);
+    		return node;
     }
     
     private String logMessage(String... args) {
